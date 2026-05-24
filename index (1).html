@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudden Shower of Algebra</title>
+    <style>
+        /* --- DESIGN SYSTEM & THEME (Pink Pastel, Dreamy, K-Drama Vibes) --- */
+        :root {
+            --pink-pastel: #FFC0CB;
+            --pink-glow: #FFB6C1;
+            --pink-dark: #FF69B4;
+            --purple-light: #E6E6FA;
+            --soft-blue: #E0FFFF;
+            --white: #FFFFFF;
+            --text-dark: #5F4B52;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FFE4E1, #E6E6FA, #E0FFFF);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-dark);
+        }
+
+        /* --- ANIMATED BACKGROUND (Hearts, Sparkles, Rain) --- */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- CONTAINER UTAMA --- */
+        .game-container {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            height: 550px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 3px solid var(--white);
+            box-shadow: 0 8px 32px rgba(255, 182, 193, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.6);
+            z-index: 2;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease;
+        }
+
+        /* --- SCREEN MANAGEMENT --- */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: scale(0.95);
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        /* --- AUDIO & UTILITY CONTROLS --- */
+        .top-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+
+        .circle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--white);
+            background: var(--pink-pastel);
+            color: var(--text-dark);
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .circle-btn:hover {
+            transform: scale(1.1);
+            background: var(--pink-dark);
+            color: white;
+            box-shadow: 0 0 15px var(--pink-glow);
+        }
+
+        /* --- UI COMPONENTS & BUTTONS --- */
+        h1.title {
+            font-size: 38px;
+            color: #FF1493;
+            text-shadow: 0 0 10px rgba(255, 105, 180, 0.6), 2px 2px var(--white);
+            text-align: center;
+            margin-bottom: 5px;
+            font-weight: 800;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            font-style: italic;
+            color: #8A2BE2;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid var(--white);
+            border-radius: 50px;
+            background: linear-gradient(45deg, var(--pink-pastel), #F8BBD0);
+            color: var(--text-dark);
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
+            transition: all 0.3s ease;
+            margin: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.4), 0 0 10px var(--white);
+            background: linear-gradient(45deg, #F8BBD0, var(--pink-glow));
+        }
+
+        /* --- GAMEPLAY HUD --- */
+        .hud {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: absolute;
+            top: 20px;
+            left: 0;
+            padding: 0 30px;
+        }
+
+        .hearts {
+            font-size: 24px;
+            color: var(--pink-dark);
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+        }
+
+        .timer-box {
+            font-weight: bold;
+            background: rgba(255,255,255,0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--pink-pastel);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+            margin-top: 55px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid var(--white);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--pink-pastel), var(--pink-dark));
+            transition: width 0.3s ease;
+        }
+
+        /* --- LAYOUT MAIN GAME (Split Kiri-Kanan) --- */
+        .game-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .quiz-side {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 15px;
+        }
+
+        .mascot-side {
+            flex: 0.8;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .question-text {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.5);
+            padding: 15px;
+            border-radius: 15px;
+            border-left: 5px solid var(--pink-dark);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .math-input {
+            flex: 1;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid var(--pink-pastel);
+            border-radius: 12px;
+            outline: none;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .math-input:focus {
+            border-color: var(--pink-dark);
+            box-shadow: 0 0 10px rgba(255,105,180,0.3);
+        }
+
+        /* --- DIALOG BOX & MASCOT --- */
+        .mascot-img {
+            width: 170px;
+            height: auto;
+            bottom: 0;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15));
+        }
+
+        .dialog-bubble {
+            position: absolute;
+            top: 20px;
+            background: var(--white);
+            border: 2px solid var(--pink-pastel);
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 500;
+            width: 160px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        .dialog-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: var(--white) transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* --- POPUP / ALERT OVERLAY --- */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .feedback-content {
+            text-align: center;
+            max-width: 80%;
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .explanation {
+            background: var(--purple-light);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        /* --- STATS & BADGES --- */
+        .combo-badge {
+            background: linear-gradient(45deg, #FFD700, #FF8C00);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes popUp {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .shake {
+            animation: shakeAnim 0.4s ease-in-out;
+        }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .game-layout { flex-direction: column-reverse; }
+            .mascot-side { height: 140px; width: 100%; justify-content: center; margin-top: 10px;}
+            .mascot-img { width: 90px; }
+            .dialog-bubble { top: -25px; width: 140px; font-size: 11px; }
+            .game-container { height: auto; min-height: 550px; padding-bottom: 20px;}
+            h1.title { font-size: 28px; }
+            .question-text { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas Efek Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Kontrol Musik Utama -->
+    <div class="top-controls">
+        <button class="circle-btn" id="music-toggle" onclick="toggleMusic()">🎵</button>
+    </div>
+
+    <!-- Container Utama Game -->
+    <div class="game-container" id="main-container">
+        
+        <!-- ================= HALAMAN AWAL (HOME) ================= -->
+        <div class="screen active" id="screen-home">
+            <h1 class="title">Sudden Shower of<br>Algebra</h1>
+            <p class="subtitle">~ Kehujanan Rumus, Kelembutan Cinta Remaja Sekolah ~</p>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button class="btn" onclick="startGame()">Mulai Belajar ✨</button>
+                <button class="btn" onclick="showScreen('screen-guide')">Petunjuk Bermain ☔</button>
+            </div>
+        </div>
+
+        <!-- ================= HALAMAN PETUNJUK ================= -->
+        <div class="screen" id="screen-guide">
+            <h1 class="title" style="font-size: 26px;">Cara Bermain</h1>
+            <div style="max-width: 80%; margin: 15px 0; font-size: 14px; line-height: 1.6; color: var(--text-dark);">
+                <p>✨ Selesaikan 10 tantangan aljabar bertahap sebelum waktu habis.</p>
+                <p>💖 Kamu memiliki 3 buah Nyawa (Hati). Jawaban salah atau waktu habis akan mengurangi nyawa.</p>
+                <p>⏳ Setiap soal diberi batas waktu 15 detik!</p>
+                <p>💫 Kumpulkan Combo untuk membuktikan kehebatan Matematikamu!</p>
+            </div>
+            <button class="btn" onclick="showScreen('screen-home')">Kembali</button>
+        </div>
+
+        <!-- ================= HALAMAN GAMEPLAY ================= -->
+        <div class="screen" id="screen-game">
+            <!-- HUD & Progress -->
+            <div class="hud">
+                <div class="hearts" id="hud-hearts">💖💖💖</div>
+                <div style="display: flex; align-items: center;">
+                    <div class="timer-box">⏳ <span id="hud-timer">15</span>s</div>
+                    <span class="combo-badge" id="hud-combo">Combo x2 🔥</span>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="game-progress"></div>
+            </div>
+
+            <!-- Konten Utama Gameplay -->
+            <div class="game-layout">
+                <!-- Sisi Kiri: Soal -->
+                <div class="quiz-side">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--pink-dark);" id="hud-question-number">Soal 1 dari 10</div>
+                    <div class="question-text" id="question-box">Memuat soal...</div>
+                    <div class="input-area">
+                        <input type="text" class="math-input" id="answer-input" placeholder="Ketik jawabanmu disini..." autocomplete="off">
+                        <button class="btn" style="margin:0;" onclick="checkAnswer()">Kirim</button>
+                    </div>
+                </div>
+                <!-- Sisi Kanan: Maskot Chibi -->
+                <div class="mascot-side">
+                    <div class="dialog-bubble" id="mascot-dialog">Semangat ya! Kamu pasti bisa menjawabnya! ✨</div>
+                    <!-- Chibi SVG Vector internal: Vibe K-Pop Academy Heroine -->
+                    <svg class="mascot-img" id="mascot-svg" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Rambut Belakang -->
+                        <path d="M40 80 C20 130 30 230 45 250 C60 230 50 130 50 80 Z" fill="#4A3325"/>
+                        <path d="M160 80 C180 130 170 230 155 250 C140 230 150 130 150 80 Z" fill="#4A3325"/>
+                        <!-- Tubuh & Seragam Pink Academy -->
+                        <rect x="75" y="150" width="50" height="70" fill="#FFF" rx="5"/>
+                        <path d="M70 160 L130 160 L125 220 L75 220 Z" fill="#FFB6C1"/>
+                        <path d="M75 160 L100 190 L125 160 Z" fill="#FF69B4"/>
+                        <!-- Kepala & Kulit -->
+                        <circle cx="100" cy="110" r="45" fill="#FFE0BD"/>
+                        <!-- Mata Besar Aesthetic -->
+                        <circle cx="85" cy="115" r="8" fill="#332211"/>
+                        <circle cx="115" cy="115" r="8" fill="#332211"/>
+                        <circle cx="83" cy="112" r="3" fill="#FFF"/>
+                        <circle cx="113" cy="112" r="3" fill="#FFF"/>
+                        <!-- Pipi Merona -->
+                        <ellipse cx="77" cy="125" rx="5" ry="3" fill="#FFB6C1" opacity="0.7"/>
+                        <ellipse cx="123" cy="125" rx="5" ry="3" fill="#FFB6C1" opacity="0.7"/>
+                        <!-- Mulut (Default Senyum) -->
+                        <path id="mascot-mouth" d="M95 128 Q100 133 105 128" stroke="#332211" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <!-- Rambut Depan / Poni Chibi -->
+                        <path d="M55 90 C55 50 145 50 145 90 C130 70 70 70 55 90 Z" fill="#5C3E2D"/>
+                        <path d="M55 85 Q75 105 85 95 Q100 110 115 95 Q125 105 145 85" stroke="#4A3325" stroke-width="3" fill="none"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Overlay Feedback Interaktif (Benar/Salah) -->
+            <div class="feedback-overlay" id="feedback-screen">
+                <div class="feedback-content">
+                    <h2 id="feedback-title" style="font-size: 28px; color: var(--pink-dark); margin-bottom: 10px;">Wow, daebak ✨</h2>
+                    <p id="feedback-text"></p>
+                    <div id="feedback-explanation-box" class="explanation"></div>
+                    <button class="btn" style="margin-top: 20px;" onclick="nextQuestion()">Lanjut ☔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= HALAMAN AKHIR (ENDING) ================= -->
+        <div class="screen" id="screen-ending">
+            <h1 class="title" style="font-size: 32px;">Sudden Shower Clear ✨</h1>
+            <p id="ending-dialog" style="font-style: italic; text-align: center; margin-bottom: 20px; color: #8A2BE2;">"Kamu berhasil menyelesaikan Sudden Shower of Algebra 💖"</p>
+            
+            <!-- Tabel Skor Pop-up Style -->
+            <table style="width: 80%; background: white; border-radius: 15px; padding: 15px; border-collapse: collapse; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                <tr style="border-bottom: 1px solid #FFE4E1;">
+                    <td style="padding: 8px; font-weight: bold;">Total Skor:</td>
+                    <td style="padding: 8px; text-align: right; font-weight: bold; color: var(--pink-dark);" id="end-score">0</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #FFE4E1;">
+                    <td style="padding: 8px;">Benar / Salah:</td>
+                    <td style="padding: 8px; text-align: right;" id="end-stats">0 / 0</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; font-weight: bold;">Gelar Akademik:</td>
+                    <td style="padding: 8px; text-align: right; font-weight: bold; color: #8A2BE2;" id="end-rank">Math Beginner</td>
+                </tr>
+            </table>
+
+            <button class="btn" onclick="resetGame()">Main Lagi ☔</button>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        /* ==========================================================================
+           KUNCI JAWABAN & DATABASE SOAL (Mudah dipantau oleh Guru/Pengembang)
+           ========================================================================== */
+        const QUESTION_DATABASE = [
+            { question: "Sederhanakan bentuk: 3x + 5x", answer: "8x", exp: "Jumlahkan koefisien variabel yang sama: 3 + 5 = 8. Maka hasilnya 8x." },
+            { question: "Jika x = 4, berapakah nilai dari 2x + 7?", answer: "15", exp: "Substitusi nilai x: 2(4) + 7 = 8 + 7 = 15." },
+            { question: "Sederhanakan operasi: 10y - 3y - 2", answer: "7y-2", exp: "Kurangkan suku ber-variabel y: 10y - 3y = 7y. Angka konstan tetap, menjadi 7y - 2." },
+            { question: "Tentukan nilai x dari persamaan dasar: x - 5 = 12", answer: "17", exp: "Pindahkan -5 ke ruas kanan menjadi positif: x = 12 + 5 = 17." },
+            { question: "Hasil perkalian sederhana dari: 3(2a + 4)", answer: "6a+12", exp: "Gunakan sifat distributif perkalian: 3*2a + 3*4 = 6a + 12." },
+            { question: "Jika a = 3 dan b = 2, hitung nilai dari: 5a - 2b", answer: "11", exp: "Substitusi masuk nilai variabel: 5(3) - 2(2) = 15 - 4 = 11." },
+            { question: "Tentukan nilai y dari persamaan: 2y + 4 = 14", answer: "5", exp: "Pindahkan angka 4: 2y = 10. Bagi kedua sisi dengan 2, maka y = 5." },
+            { question: "Faktorkan bentuk aljabar berikut: p² + 3p", answer: "p(p+3)", exp: "Keluarkan variabel persekutuan terbesar p, sehingga menjadi p(p + 3)." },
+            { question: "Sederhanakan bentuk pecahan aljabar: 12x / 4", answer: "3x", exp: "Bagilah koefisien pembilang dengan penyebutnya: 12 dibagi 4 adalah 3, variabel x mengikuti." },
+            { question: "Tentukan x jika diketahui persamaan: 3x = x + 8", answer: "4", exp: "Pindahkan x ruas kanan ke kiri: 3x - x = 8 -> 2x = 8. Maka didapat x = 4." }
+        ];
+
+        /* --- GAME VARIABLES --- */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let timerInterval;
+        let timeLeft = 15;
+        let totalCorrect = 0;
+        let totalWrong = 0;
+        let audioCtx = null;
+        let isMusicPlaying = false;
+        let musicInterval;
+
+        /* --- DIALOG LISTS --- */
+        const correctDialogs = ["Wow, daebak ✨", "Nice work 💖", "Keren, jawabanmu benar ☔", "Good job, lanjut ke soal berikutnya ✨", "Combo kamu bagus banget 💫"];
+        const wrongDialogs = ["Gwenchaaana ☔", "Tidak apa-apa, coba lagi ✨", "Hampir benar, tetap fokus 💖", "Tetap semangat belajar ya! 💫"];
+
+        /* --- CANVAS EFFECT SETUP --- */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let elements = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class BackgroundElement {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height - canvas.height;
+                this.size = Math.random() * 8 + 4;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.sin(Math.random()) * 0.5;
+                this.type = Math.random() > 0.5 ? 'heart' : 'sparkle';
+                this.opacity = Math.random() * 0.5 + 0.3;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                if (this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#FFB6C1';
+                if (this.type === 'heart') {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.bezierCurveTo(this.x - this.size/2, this.y - this.size/2, this.x - this.size, this.y + this.size/3, this.x, this.y + this.size);
+                    ctx.bezierCurveTo(this.x + this.size, this.y + this.size/3, this.x + this.size/2, this.y - this.size/2, this.x, this.y);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#FFF';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#FFF';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size/3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 40; i++) elements.push(new BackgroundElement());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            elements.forEach(el => { el.update(); el.draw(); });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        /* --- AUDIO SYNTHESIZER (K-Drama Vibe Built-in BGM Generator) --- */
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration, startTime, volume = 0.1) {
+            if (!audioCtx) return;
+            let osc = audioCtx.createOscillator();
+            let gainNode = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, startTime);
+            gainNode.gain.setValueAtTime(volume, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, startTime + duration);
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        }
+
+        function startBGM() {
+            initAudio();
+            if (isMusicPlaying) return;
+            isMusicPlaying = true;
+            document.getElementById('music-toggle').innerText = "🔊";
+            
+            // Progression Chords Ringan ala KDroma J-Pop (C - G - Am - F)
+            let melody = [261.63, 392.00, 440.00, 349.23, 329.63, 392.00, 523.25, 493.88];
+            let step = 0;
+
+            musicInterval = setInterval(() => {
+                let now = audioCtx.currentTime;
+                // Bass/Chord Track Semu
+                let baseFreq = melody[step % 4] / 2;
+                playTone(baseFreq, 'triangle', 0.8, now, 0.15);
+                
+                // Cute Dreamy Bells Track Melodi
+                if(step % 2 === 0) {
+                    let synthFreq = melody[(step + 2) % melody.length];
+                    playTone(synthFreq, 'sine', 0.4, now + 0.2, 0.08);
+                }
+                
+                // Sparkle Percussion Sound
+                if (step % 4 === 2) {
+                    playTone(1000, 'sine', 0.05, now, 0.03);
+                }
+
+                step++;
+            }, 400);
+        }
+
+        function stopBGM() {
+            isMusicPlaying = false;
+            document.getElementById('music-toggle').innerText = "🎵";
+            clearInterval(musicInterval);
+        }
+
+        function toggleMusic() {
+            if (isMusicPlaying) stopBGM();
+            else startBGM();
+        }
+
+        /* --- CORE GAME LOGIC ENGINE --- */
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            startBGM();
+            currentQuestionIndex = 0;
+            score = 0;
+            lives = 3;
+            combo = 0;
+            totalCorrect = 0;
+            totalWrong = 0;
+            updateHUD();
+            showScreen('screen-game');
+            loadQuestion();
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-hearts').innerText = "💖".repeat(lives) + "💔".repeat(3 - lives);
+            document.getElementById('hud-question-number').innerText = `Soal ${currentQuestionIndex + 1} dari ${QUESTION_DATABASE.length}`;
+            let progressPercent = (currentQuestionIndex / QUESTION_DATABASE.length) * 100;
+            document.getElementById('game-progress').style.width = `${progressPercent}%`;
+            
+            if (combo > 1) {
+                let badge = document.getElementById('hud-combo');
+                badge.innerText = `Combo x${combo} 🔥`;
+                badge.style.display = 'inline-block';
+            } else {
+                document.getElementById('hud-combo').style.display = 'none';
+            }
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= QUESTION_DATABASE.length || lives <= 0) {
+                endGame();
+                return;
+            }
+
+            updateHUD();
+            let currentData = QUESTION_DATABASE[currentQuestionIndex];
+            document.getElementById('question-box').innerText = currentData.question;
+            document.getElementById('answer-input').value = "";
+            document.getElementById('answer-input').focus();
+            
+            // Ganti ekspresi wajah ke default maskot senyum hangat
+            document.getElementById('mascot-mouth').setAttribute('d', 'M95 128 Q100 133 105 128');
+            document.getElementById('mascot-dialog').innerText = "Ayo fokus fokus! Pasti bisa dicari polanya! ✨";
+
+            timeLeft = 15;
+            document.getElementById('hud-timer').innerText = timeLeft;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('hud-timer').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function checkAnswer() {
+            clearInterval(timerInterval);
+            let playerAns = document.getElementById('answer-input').value.trim().replace(/\s+/g, '').toLowerCase();
+            let targetData = QUESTION_DATABASE[currentQuestionIndex];
+            let cleanTarget = targetData.answer.replace(/\s+/g, '').toLowerCase();
+
+            let isCorrect = (playerAns === cleanTarget);
+
+            let feedbackOverlay = document.getElementById('feedback-screen');
+            let fTitle = document.getElementById('feedback-title');
+            let fText = document.getElementById('feedback-text');
+            let fExp = document.getElementById('feedback-explanation-box');
+
+            if (isCorrect) {
+                totalCorrect++;
+                combo++;
+                score += 10 * combo;
+                fTitle.innerText = correctDialogs[Math.floor(Math.random() * correctDialogs.length)];
+                fText.innerText = "Jawaban kamu tepat sekali!";
+                fExp.innerHTML = `<b>Penyelesaian:</b> ${targetData.exp}`;
+                
+                // Efek Maskot Senang Amat Sangat
+                document.getElementById('mascot-mouth').setAttribute('d', 'M93 125 Q100 140 107 125');
+                document.getElementById('mascot-dialog').innerText = "Daebak! Kamu hebat sekali! 💫";
+                
+                // Sound efek benar otomatis singkat
+                if(isMusicPlaying) {
+                    let now = audioCtx.currentTime;
+                    playTone(523.25, 'sine', 0.1, now, 0.1);
+                    playTone(659.25, 'sine', 0.1, now + 0.1, 0.1);
+                    playTone(783.99, 'sine', 0.2, now + 0.2, 0.1);
+                }
+            } else {
+                totalWrong++;
+                combo = 0;
+                lives--;
+                fTitle.innerText = wrongDialogs[Math.floor(Math.random() * wrongDialogs.length)];
+                fText.innerHTML = `Jawaban salah atau kurang tepat. Jawaban benar: <b style="color:var(--pink-dark);">${targetData.answer}</b>`;
+                fExp.innerHTML = `<b>Penyelesaian:</b> ${targetData.exp}`;
+                
+                // Efek Maskot Sedih Lucu
+                document.getElementById('mascot-mouth').setAttribute('d', 'M95 133 Q100 125 105 133');
+                document.getElementById('mascot-dialog').innerText = "Gwenchana, ayo pelajari pembahasannya... ☔";
+                
+                // Efek getar layar wadah utama saat salah
+                document.getElementById('main-container').classList.add('shake');
+                setTimeout(() => document.getElementById('main-container').classList.remove('shake'), 400);
+
+                if(isMusicPlaying) {
+                    let now = audioCtx.currentTime;
+                    playTone(293.66, 'sawtooth', 0.3, now, 0.1);
+                }
+            }
+
+            feedbackOverlay.classList.add('active');
+        }
+
+        function handleTimeout() {
+            totalWrong++;
+            combo = 0;
+            lives--;
+            let targetData = QUESTION_DATABASE[currentQuestionIndex];
+
+            let feedbackOverlay = document.getElementById('feedback-screen');
+            document.getElementById('feedback-title').innerText = "Time’s Up! Waktunya habis ☔";
+            document.getElementById('feedback-text').innerHTML = `Jangan melamun, yuk semangat! Jawaban benar: <b>${targetData.answer}</b>`;
+            document.getElementById('feedback-explanation-box').innerHTML = `<b>Penyelesaian:</b> ${targetData.exp}`;
+            
+            document.getElementById('mascot-mouth').setAttribute('d', 'M95 133 Q100 125 105 133');
+            
+            feedbackOverlay.classList.add('active');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-screen').classList.remove('active');
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            showScreen('screen-ending');
+            
+            document.getElementById('end-score').innerText = score;
+            document.getElementById('end-stats').innerText = `${totalCorrect} Benar / ${totalWrong} Salah`;
+            
+            let rank = "Beginner Student";
+            if (score >= 150) rank = "👑 Math Queen";
+            else if (score >= 100) rank = "💖 Algebra Princess";
+            else if (score >= 60) rank = "✨ Smart Student";
+
+            document.getElementById('end-rank').innerText = rank;
+            
+            if(totalCorrect >= 7) {
+                document.getElementById('ending-dialog').innerText = "Hasil yang bagus, terus pertahankan! Sampai bertemu di permainan berikutnya ☔✨";
+            } else {
+                document.getElementById('ending-dialog').innerText = "Gwenchana! Belajar lagi bersama, kamu pasti bisa menjadi Algebra Princess berikutnya 💖";
+            }
+        }
+
+        function resetGame() {
+            showScreen('screen-home');
+        }
+
+        // Jalankan trigger deteksi tombol enter saat ngetik jawaban otomatis agar interaktif cepat
+        document.getElementById('answer-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                let overlay = document.getElementById('feedback-screen');
+                if(!overlay.classList.contains('active')) {
+                    checkAnswer();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
